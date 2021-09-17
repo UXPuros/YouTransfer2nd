@@ -3,6 +3,7 @@ import { Injectable } from '@angular/core';
 enum wsMessages {
   ID = 'myid',
   MSG = 'msg',
+  HANDSHAKE = 'handshake',
   ALLFILES = 'files',
   FILEREQUEST = 'filereq',
   FILESEND = 'filesend'
@@ -17,12 +18,12 @@ interface wsDirectMsg extends wsGenericMsg {
   from: string;
   message: string;
 }
-// interface wsIceMsg extends wsDirectMsg {
-//   message: {
-//       stage: number;
-//       data: string | null
-//   }
-// }
+interface wsHandshakeMsg extends Omit<wsDirectMsg, 'message'> {
+  message: {
+      stage: number;
+      data: string | null
+  }
+}
 interface wsFileListMsg extends wsGenericMsg {
   data: availableFile[]
 }
@@ -61,8 +62,8 @@ export class WebsocketService {
   }
 
   distributeFile(file: File) {
-    // console.log(`making "${file.name}" available`)
-    console.log(file)
+    console.log(`making "${file.name}" available`)
+    // console.log(file)
 
     const fileOffer: availableFile = {
       owner: this.myId,
@@ -76,11 +77,10 @@ export class WebsocketService {
       type: wsMessages.FILESEND,
       data: fileOffer
     }
-    this.send(fileOffer)
+    this.send(fileOfferMsg)
   }
 
   private receviedMessages(message: MessageEvent) {
-
 
     let parsed = JSON.parse(message.data) as wsGenericMsg
     // console.log(messagecount, message.data, parsed)
@@ -93,6 +93,11 @@ export class WebsocketService {
 
       case wsMessages.MSG:
         this.processMsg(parsed as wsDirectMsg)
+
+        break;
+
+      case wsMessages.HANDSHAKE:
+        this.processHandshakes(parsed as wsHandshakeMsg)
 
         break;
 
@@ -116,12 +121,18 @@ export class WebsocketService {
 
   }
 
-  private processMsg(message: wsDirectMsg) {
+  private processMsg(message:wsDirectMsg ) {
 
+  }
+
+  private processHandshakes(message:wsHandshakeMsg) {
+
+    
   }
 
   private processAllFiles(message: wsFileListMsg) {
     this.allFiles = message.data;
+    console.log( this.allFiles)
   }
 
 }

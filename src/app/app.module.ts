@@ -1,4 +1,6 @@
+
 import { WebsocketService } from './websocket.service';
+import { Peer2peerService } from './peer2peer.service';
 import { NgModule } from '@angular/core';
 import { BrowserModule } from '@angular/platform-browser';
 
@@ -15,7 +17,9 @@ import { DownloadButtonComponent } from './download-button/download-button.compo
     BrowserModule,
     AppRoutingModule
   ],
-  providers: [WebsocketService],
+  providers: [WebsocketService, 
+              Peer2peerService
+            ],
   bootstrap: [AppComponent]
 })
 export class AppModule { }

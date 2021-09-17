@@ -1,6 +1,10 @@
 import { Component } from '@angular/core';
 import { WebsocketService } from './websocket.service';
 
+interface FileOffer{
+  
+}
+
 @Component({
   selector: 'app-root',
   templateUrl: './app.component.html',
@@ -9,12 +13,11 @@ import { WebsocketService } from './websocket.service';
 export class AppComponent {
   title = 'peertest';
 
+  fileOffers=[]
+
   
 
   constructor(public ws:WebsocketService){
-
-    // this.ws.distributeFile()
-    
 
   }
 
@@ -26,11 +29,8 @@ export class AppComponent {
     const choosenFile = fileInput.files[0]
 
     
-
     this.ws.distributeFile(choosenFile)
     fileInput.value = ''
-
-    
 
   }
 
