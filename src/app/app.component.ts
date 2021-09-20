@@ -28,14 +28,20 @@ export class AppComponent {
       return
     }
     const choosenFile = fileInput.files[0]
+    choosenFile.lastModified
 
-    
-    this.ws.distributeFile(choosenFile)
+    this.ws.sendFileOffering(`F${choosenFile.lastModified}`, choosenFile.name, choosenFile.size, choosenFile.type)
     fileInput.value = ''
 
   }
 
-  upload(file:availableFile){
+  upload(){
+
+  }
+
+  deleteFile(fileId: string){
+
+    this.ws.revoqueFileOffering(fileId)
 
   }
 
