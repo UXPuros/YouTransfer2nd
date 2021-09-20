@@ -6,7 +6,8 @@ enum wsMessages {
   HANDSHAKE = 'handshake',
   ALLFILES = 'files',
   FILEREQUEST = 'filereq',
-  FILESEND = 'filesend'
+  FILESEND = 'filesend', 
+  CANCEL = 'filecancel'
 }
 
 interface wsGenericMsg {
@@ -18,10 +19,10 @@ interface wsDirectMsg extends wsGenericMsg {
   from: string;
   message: string;
 }
-interface wsHandshakeMsg extends Omit<wsDirectMsg, 'message'> {
+export interface wsHandshakeMsg extends Omit<wsDirectMsg, 'message'> {
   message: {
-      stage: number;
-      data: string | null
+    stage: number;
+    data: string | null
   }
 }
 interface wsFileListMsg extends wsGenericMsg {
@@ -42,8 +43,8 @@ export interface availableFile {
 })
 export class WebsocketService {
 
-  private ws: WebSocket = new WebSocket("ws://77.54.205.151/", ['json']);
-  private myId: string = '';
+  private _ws: WebSocket = new WebSocket("ws://77.54.205.151/", ['json']);
+  private _myId: string = '';
   allFiles: availableFile[] = []
 
   constructor() {
@@ -51,8 +52,8 @@ export class WebsocketService {
     this.ws.onmessage = this.receviedMessages.bind(this)
   }
 
-  private send(data:any){
-    this.ws.send(JSON.stringify(data))
+  send(data: any) {
+    this._ws.send(JSON.stringify(data))
 
   }
 
@@ -61,23 +62,33 @@ export class WebsocketService {
 
   }
 
+  sendFileOffering(fileId: string, fileName: string, fileSize: number, fileType: string) {
+    const fileOfferMsg: wsGenericMsg = {
+      type: wsMessages.FILESEND,
+      data: {
+        owner: this._myId,
+        type: fileType,
+        size: fileSize,
+        name: fileName,
+        id: fileId
+      }
+    }
+
+    this.send(fileOfferMsg)
+  }
+
+  revoqueFileOffering(fileId: string){
+
+    const fileCancel: wsGenericMsg = {
+      type: wsMessages.CANCEL,
+      data: fileId
+    }
+    this.send(fileCancel)
+  }
+
   distributeFile(file: File) {
     console.log(`making "${file.name}" available`)
-    // console.log(file)
 
-    const fileOffer: availableFile = {
-      owner: this.myId,
-      type: file.type,
-      size: file.size,
-      name: file.name,
-      id: `F${file.lastModified}`
-    }
-
-    const fileOfferMsg: wsGenericMsg= {
-      type: wsMessages.FILESEND,
-      data: fileOffer
-    }
-    this.send(fileOfferMsg)
   }
 
   private receviedMessages(message: MessageEvent) {
@@ -114,25 +125,53 @@ export class WebsocketService {
 
   private processMyId(message: wsGenericMsg) {
 
-    this.myId = message.data
+    this._myId = message.data
 
     console.log(this.myId)
 
 
   }
 
-  private processMsg(message:wsDirectMsg ) {
+  private processMsg(message: wsDirectMsg) {
 
   }
 
-  private processHandshakes(message:wsHandshakeMsg) {
+  private processHandshakes(message: wsHandshakeMsg) {
 
-    
+
   }
 
   private processAllFiles(message: wsFileListMsg) {
     this.allFiles = message.data;
-    console.log( this.allFiles)
+    console.log(this.allFiles)
+  }
+
+  get myId() {
+    return this._myId
+  }
+
+  get ws() {
+    return this._ws
+  }
+
+  getAllFiles() {
+    return this.allFiles
+  }
+
+  sendHandshake(to: string, stage: number = 0, data: string | null = null) {
+
+    const request = {
+      type: wsMessages.HANDSHAKE,
+      to: to,
+      from: this._myId,
+      message: {
+        stage: stage,
+        data: data
+      }
+    }
+
+    this.send(request)
   }
 
 }
+

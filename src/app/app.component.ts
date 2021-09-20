@@ -1,7 +1,10 @@
+import { Peer2peerService } from './peer2peer.service';
 import { Component } from '@angular/core';
-import { WebsocketService } from './websocket.service';
+import { WebsocketService, availableFile } from './websocket.service';
 
 interface FileOffer{
+  file: availableFile
+  peer2peer: Peer2peerService
   
 }
 
@@ -13,9 +16,7 @@ interface FileOffer{
 export class AppComponent {
   title = 'peertest';
 
-  fileOffers=[]
-
-  
+  fileOffers=[]  
 
   constructor(public ws:WebsocketService){
 
@@ -31,6 +32,10 @@ export class AppComponent {
     
     this.ws.distributeFile(choosenFile)
     fileInput.value = ''
+
+  }
+
+  upload(file:availableFile){
 
   }
 
