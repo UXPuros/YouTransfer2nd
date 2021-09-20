@@ -62,6 +62,7 @@ export class WebsocketService {
 
     if(parsed.type == wsMessages.ID) {
       this._myId = parsed.data
+    
     }else{
       this._messageSubject.next(parsed as wsDirectMsg)
     }
@@ -106,6 +107,7 @@ export class WebsocketService {
 
     this.send(request)
   }
+
 
 }
 
