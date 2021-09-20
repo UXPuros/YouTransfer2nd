@@ -1,11 +1,23 @@
 import { Peer2peerService } from './peer2peer.service';
-import { Component } from '@angular/core';
-import { WebsocketService, availableFile } from './websocket.service';
+import { Component, OnDestroy } from '@angular/core';
+import { WebsocketService, wsMessages } from './websocket.service';
+import { Subscription } from 'rxjs';
 
-interface FileOffer{
+interface FileOffer {
   file: availableFile
   peer2peer: Peer2peerService
-  
+}
+
+// interface wsFileListMsg extends wsGenericMsg {
+//   data: availableFile[]
+// }
+
+export interface availableFile {
+  owner: string;
+  type: string;
+  size: number;
+  name: string;
+  id: string;
 }
 
 @Component({
@@ -13,18 +25,23 @@ interface FileOffer{
   templateUrl: './app.component.html',
   styleUrls: ['./app.component.scss']
 })
-export class AppComponent {
+export class AppComponent implements OnDestroy {
   title = 'peertest';
 
-  fileOffers=[]  
+  fileOffers: availableFile[] = []
+  fillOffersSubscription: Subscription;
 
-  constructor(public ws:WebsocketService){
-
+  constructor(public ws: WebsocketService) {
+    this.fillOffersSubscription = this.ws.messages.subscribe((wsMessage) => {
+      if (wsMessage.type == wsMessages.ALLFILES) {
+        this.fileOffers = wsMessage.data as availableFile[]
+      }
+    })
   }
 
-  fileSet(e:Event){
+  fileSet(e: Event) {
     const fileInput = e.target as HTMLInputElement
-    if(!fileInput.files || !fileInput.files.length){
+    if (!fileInput.files || !fileInput.files.length) {
       return
     }
     const choosenFile = fileInput.files[0]
@@ -35,14 +52,18 @@ export class AppComponent {
 
   }
 
-  upload(){
+  download() {
 
   }
 
-  deleteFile(fileId: string){
+  deleteFile(fileId: string) {
 
     this.ws.revoqueFileOffering(fileId)
 
+  }
+
+  ngOnDestroy() {
+    this.fillOffersSubscription.unsubscribe()
   }
 
 }

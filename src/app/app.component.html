@@ -12,8 +12,10 @@
  
   <input type="file" id="fileupload" name="fileupload" (change)="fileSet($event)" >
    <ul>
-     <li *ngFor="let file of ws.allFiles">
-       <button (click)="upload(file)">{{file.name}}</button>
+     <li *ngFor="let file of fileOffers;">
+      {{file.name}}
+       <button (click)="download()">{{file.name}}</button>
+       <button (click)="deleteFile(file.id)">X</button>
        
      </li>
    </ul>
