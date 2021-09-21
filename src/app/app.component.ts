@@ -31,10 +31,14 @@ export class AppComponent implements OnDestroy {
   fileOffers: availableFile[] = []
   fillOffersSubscription: Subscription;
 
-  constructor(public ws: WebsocketService) {
+  constructor(public ws: WebsocketService, private p2p: Peer2peerService) {
     this.fillOffersSubscription = this.ws.messages.subscribe((wsMessage) => {
       if (wsMessage.type == wsMessages.ALLFILES) {
         this.fileOffers = wsMessage.data as availableFile[]
+      }
+      else if(wsMessage.type == wsMessages.P2PSTART){
+        this.p2p.getMofoConnection(wsMessage.to, wsMessage.data.usertype)
+
       }
     })
   }
@@ -52,7 +56,10 @@ export class AppComponent implements OnDestroy {
 
   }
 
-  download() {
+  download(owner:string) {
+    // console.log(owner)
+    // this.p2p.getMofoConnection(owner)
+    this.ws.sendPeerOrder(owner)
 
   }
 

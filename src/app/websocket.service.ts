@@ -1,3 +1,4 @@
+
 import { Injectable } from '@angular/core';
 import { Subject } from 'rxjs';
 
@@ -8,7 +9,8 @@ export enum wsMessages {
   ALLFILES = 'files',
   FILEREQUEST = 'filereq',
   FILESEND = 'filesend', 
-  CANCEL = 'filecancel'
+  CANCEL = 'filecancel',
+  P2PSTART = 'p2pstart'
 }
 
 interface wsGenericMsg {
@@ -18,7 +20,7 @@ interface wsGenericMsg {
 export interface wsDirectMsg extends wsGenericMsg {
   to: string;
   from: string;
-  message: string;
+  message: any;
 }
 
 
@@ -104,9 +106,21 @@ export class WebsocketService {
         data: data
       }
     }
-
     this.send(request)
   }
+
+
+
+
+  sendPeerOrder(to: string ){
+    const request = {
+      type : wsMessages.P2PSTART,
+      to: to,
+      from: this._myId
+    }
+    this.send(request)
+  }
+  
 
 
 }

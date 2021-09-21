@@ -14,7 +14,7 @@
    <ul>
      <li *ngFor="let file of fileOffers;">
       {{file.name}}
-       <button (click)="download()">{{file.name}}</button>
+       <button (click)="download(file.owner)">{{file.name}}</button>
        <button (click)="deleteFile(file.id)">X</button>
        
      </li>
