@@ -110,8 +110,6 @@ export class WebsocketService {
   }
 
 
-
-
   sendPeerOrder(to: string ){
     const request = {
       type : wsMessages.P2PSTART,
@@ -120,8 +118,6 @@ export class WebsocketService {
     }
     this.send(request)
   }
-  
-
 
 }
 

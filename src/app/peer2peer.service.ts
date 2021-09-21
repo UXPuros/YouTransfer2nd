@@ -1,3 +1,4 @@
+
 import { Injectable } from '@angular/core';
 import { Subscription } from 'rxjs';
 import { WebsocketService, wsMessages, wsDirectMsg } from './websocket.service';
@@ -39,18 +40,20 @@ export class P2PConnection {
 
   private createPeer(target: string) {
     let myPeer = new RTCPeerConnection(this.peerConfig)
-    myPeer.onicecandidate = (event) => {
-      console.log('cheguei')
-      if (event.candidate) {
-        this.sendIceCandidate(target, this.from, event.candidate)
-      }
-    }
+    
 
     myPeer.ondatachannel = (event) => {
       const dataChannel = event.channel
 
       dataChannel.onmessage = async (message) => {
         console.log('received message', message)
+      }
+    }
+
+    myPeer.onicecandidate = (event) => {
+      console.log('cheguei')
+      if (event.candidate) {
+        this.sendIceCandidate(target, event.candidate)
       }
     }
 
@@ -74,8 +77,8 @@ export class P2PConnection {
   }
 
 
-  sendIceCandidate(to: string, from: string, candidate: RTCIceCandidate) {
-    this.ws.sendHandshake(from, 4, candidate)
+  sendIceCandidate(target: string,  candidate: RTCIceCandidate) {
+    this.ws.sendHandshake(target, 4, candidate)
 
   }
 
@@ -83,20 +86,18 @@ export class P2PConnection {
   connect() {
 
     this.receivedAnswers = this.ws.messages.subscribe((wsMessage) => {
-      // console.log('Got Message', wsMessage)
 
       this.connectionSteeps(wsMessage)
-      console.log('got it')
     })
 
   }
 
   async connectionSteeps(wsMessage: wsDirectMsg) {
     if (wsMessage.type == wsMessages.HANDSHAKE) {
+      console.log('got message--->', wsMessage)
 
       switch (wsMessage.message.stage) {
         case 0:
-          console.log('case 0')
           this.myPeer = this.createPeer(wsMessage.from)
 
 
@@ -104,15 +105,6 @@ export class P2PConnection {
           this.ws.sendHandshake(wsMessage.from, 1)
           break;
         case 1:
-          if(!this.myPeer){
-            console.log('breakei')
-            break
-          }
-          console.log('case 1')
-
-          if(!this.myPeer){
-          console.log('breakei')
-          break}
 
           const offer = await this.myPeer?.createOffer()
           await this.myPeer?.setLocalDescription(offer)
@@ -122,48 +114,25 @@ export class P2PConnection {
           break;
 
         case 2:
-          if(!this.myPeer){
-            console.log('breakei')
-            break
-          }
-          console.log('case 2')
 
           await this.myPeer?.setRemoteDescription(wsMessage.message.data)
           const answer = await this.myPeer?.createAnswer()
           await this.myPeer?.setLocalDescription(answer)
-          // console.log('answer', answer)
 
           this.ws.sendHandshake(wsMessage.from, 3, this.myPeer?.localDescription)
 
           break;
 
         case 3:
-          if(!this.myPeer){
-            console.log('breakei')
-            break
-          }
-          console.log('case 3')
+         
           await this.myPeer?.setRemoteDescription(wsMessage.message.data)
           break;
 
         default:
-          if(!this.myPeer){
-            console.log('breakei')
-            break
-          }
-
-        try{
-
-          this.myPeer?.addIceCandidate(wsMessage.message.data)}
-          catch{
-            console.error('stfu')
-          }
-          console.log('ice', wsMessage.message.data)
+          this.myPeer?.addIceCandidate(wsMessage.message.data)
           break;
 
       }
-      console.log('mypeerfinal', this.myPeer)
-      // console.log(wsMessage.message.data)
     }
   }
 
