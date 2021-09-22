@@ -1,7 +1,6 @@
+import { TransferService } from './transfer.service';
 import { Peer2peerService } from './peer2peer.service';
-import { Component, OnDestroy } from '@angular/core';
-import { WebsocketService, wsMessages } from './websocket.service';
-import { Subscription } from 'rxjs';
+import { Component } from '@angular/core';
 
 interface FileOffer {
   file: availableFile
@@ -25,22 +24,16 @@ export interface availableFile {
   templateUrl: './app.component.html',
   styleUrls: ['./app.component.scss']
 })
-export class AppComponent implements OnDestroy {
+export class AppComponent {
   title = 'peertest';
 
   fileOffers: availableFile[] = []
-  fillOffersSubscription: Subscription;
+  
 
-  constructor(public ws: WebsocketService, private p2p: Peer2peerService) {
-    this.fillOffersSubscription = this.ws.messages.subscribe((wsMessage) => {
-      if (wsMessage.type == wsMessages.ALLFILES) {
-        this.fileOffers = wsMessage.data as availableFile[]
-      }
-      // else if(wsMessage.type == wsMessages.P2PSTART){
-      //   this.p2p.getMofoConnection(wsMessage.to, wsMessage.data.usertype)
 
-      // }
-    })
+  constructor(public ts: TransferService) {
+    console.log(ts.fileOffers)
+
   }
 
   fileSet(e: Event) {
@@ -49,28 +42,27 @@ export class AppComponent implements OnDestroy {
       return
     }
     const choosenFile = fileInput.files[0]
-    choosenFile.lastModified
-
-    this.ws.sendFileOffering(`F${choosenFile.lastModified}`, choosenFile.name, choosenFile.size, choosenFile.type)
+    this.ts.fileOffer(choosenFile)
     fileInput.value = ''
 
   }
 
-  download(owner:string) {
 
-    this.p2p.getMofoConnection(owner)
+  download(owner: string) {
 
+    
 
-  }
+    this.ts.download(owner)
 
-  deleteFile(fileId: string) {
-
-    this.ws.revoqueFileOffering(fileId)
 
   }
 
-  ngOnDestroy() {
-    this.fillOffersSubscription.unsubscribe()
-  }
+  // deleteFile(fileId: string) {
+
+  //   this.ws.revoqueFileOffering(fileId)
+
+  // }
+
+
 
 }

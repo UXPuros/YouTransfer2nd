@@ -33,18 +33,17 @@ export class Peer2peerService {
 
   }
 
-  handleIncomingMessages(wsMessage: wsDirectMsg ) {
-    if (wsMessage.type != wsMessages.HANDSHAKE) 
-    return;
+  handleIncomingMessages(wsMessage: wsDirectMsg) {
+    if (wsMessage.type != wsMessages.HANDSHAKE)
+      return;
 
 
     const targetConnection = wsMessage.from;
-    if(typeof this.MoFosConnections[targetConnection]=='undefined')
-    {
+    if (typeof this.MoFosConnections[targetConnection] == 'undefined') {
 
-      if( wsMessage.message.stage == 0 )
-      this.MoFosConnections[targetConnection] = new P2PConnection(wsMessage.from, this.websocket, wsMessage.message.data);
-    }else{
+      if (wsMessage.message.stage == 0)
+        this.MoFosConnections[targetConnection] = new P2PConnection(wsMessage.from, this.websocket, wsMessage.message.data);
+    } else {
       this.MoFosConnections[targetConnection].messageForMe(wsMessage)
     }
 
@@ -52,14 +51,14 @@ export class Peer2peerService {
 
   }
 
-  getMofoConnection(remoteID: string): P2PConnection {
+  getMofoConnection(remoteID: string,): P2PConnection {
     if (typeof this.MoFosConnections[remoteID] != 'undefined')
       return this.MoFosConnections[remoteID];
 
     const newP2PC = new P2PConnection(remoteID, this.websocket);
 
-      this.MoFosConnections[remoteID] = newP2PC;
-      return newP2PC;
+    this.MoFosConnections[remoteID] = newP2PC;
+    return newP2PC;
 
   }
 

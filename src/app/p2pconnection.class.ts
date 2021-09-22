@@ -1,62 +1,146 @@
 
-import { Subscription } from 'rxjs';
 import { WebsocketService, wsDirectMsg, wsMessages, wsHandshakeMsg } from './websocket.service';
 
 export class P2PConnection {
 
 
-    peerConfig = {
-        "iceServers": [{
-            urls: 'turn:numb.viagenie.ca',
-            credential: 'muazkh',
-            username: 'webrtc@live.com'
-        },]
+    peerConfig:RTCConfiguration = {
+        iceServers: [
+            {
+                urls: 'turn:numb.viagenie.ca',
+                credential: 'muazkh',
+                username: 'webrtc@live.com'
+            },
+            // {
+            //     urls: [
+            //         'stun:stun1.l.google.com:19302',
+            //         'stun:stun2.l.google.com:19302',
+            //         'stun:stun3.l.google.com:19302',
+            //         'stun:stun4.l.google.com:19302',
+            //     ]
+            // }
+        ],
+        // bundlePolicy: 'max-bundle'
     }
 
     localChannel: any
     dataChannels: RTCDataChannel[] = [];
-    peerConn?: RTCPeerConnection
+    peerConn: RTCPeerConnection = new RTCPeerConnection(this.peerConfig)
 
 
-    constructor(private remoteID: string, private ws: WebsocketService, private offer: any = null) {
-        console.log(this.offer ? 'incomming connection request' : 'outgoing connectiong request')
+    constructor(private remoteID: string, private ws: WebsocketService, offer: any = null) {
 
-        this.peerConn = new RTCPeerConnection(this.peerConfig)
 
+        let theMotherChannel = this.peerConn.createDataChannel('MotherChannel');
+        theMotherChannel.onopen = () => {
+            console.log(`%c MotherChannel Open!`, "background: lime;padding: 20px; color:white;");
+            for (let index = 0; index < 10; index++) {
+                let i = index;
+                setTimeout(() => {
+                    this.peerConn.createDataChannel(`Channel${i}`)
+                }, 1000 * i);
+                
+            }
+            setTimeout
+        }
         this.peerConn.onicecandidate = (e) => {
-                console.log('cheguei')
-                if (e.candidate) {
-                  this.ws.sendHandshake(remoteID, 4, e.candidate)
-                }
-              }
+            if (e.candidate)
+                this.conjureIceCandidate(e.candidate)
+        }
+        this.peerConn.ondatachannel = (something:RTCDataChannelEvent) => {
+            console.log(`%c Got a channel!`, "background: red;padding: 20px; color:white;");
+        };
 
-        if (!this.offer)
-            this.computeOffer()
+
+        // this.peerConn.onicegatheringstatechange = evt => {
+        //     console.log(`%c onicegatheringstatechange`, "background: red;padding: 20px; color:white;");
+        // };
+
+        // this.peerConn.onnegotiationneeded = evt => {
+        //     console.log(`%c onnegotiationneeded`, "background: lime;padding: 20px; color:red;");
+        // };
+
+        // this.peerConn.onicecandidateerror = evt => {
+        //     console.log(`%c icecandidateerror`, "background: black;padding: 20px; color:red;");
+        // };
+
+        this.peerConn.oniceconnectionstatechange = evt => {
+            console.log(`%c Connection State: ${this.peerConn.connectionState}`, "background: blue;padding: 20px; color:white;");
+
+        };
+
+        if (!offer)
+            this.conjureOffer()
 
         else {
-            this.computeAwswer()
+            this.computeOffer(offer)
         }
     }
 
-    async computeOffer() {
-
+    async conjureOffer() {
 
 
         const offer = await this.peerConn?.createOffer()
-        await this.peerConn?.setLocalDescription(offer)
+        await this.peerConn.setLocalDescription(offer)
 
-        console.log('sending offer', offer)
+        console.log(`Sending offer to ${this.remoteID}`)
 
         this.ws.sendHandshake(this.remoteID, 0, this.peerConn?.localDescription)
     }
 
-    async computeAwswer() {
+    async computeOffer(offer: any) {
+        console.log(`Computing offer from ${this.remoteID}`)
+        try {
+            await this.peerConn.setRemoteDescription(offer)
+            this.conjureAwswer();
+        } catch (e) {
+            console.error('Offer de merda!')
+        }
+    }
 
-        await this.peerConn?.setRemoteDescription(this.offer)
+    async conjureAwswer() {
+        console.log(`Sending answer to ${this.remoteID}`)
+
         const answer = await this.peerConn?.createAnswer()
-        await this.peerConn?.setLocalDescription(answer)
-        console.log('sending awswer', answer)
+        await this.peerConn.setLocalDescription(answer)
         this.ws.sendHandshake(this.remoteID, 1, this.peerConn?.localDescription)
+    }
+
+    async computeAnswer(answer: any) {
+        console.log(`Computing answer from ${this.remoteID}`)
+        await this.peerConn.setRemoteDescription(answer as RTCSessionDescriptionInit)
+
+    }
+
+
+    conjureIceCandidate(candidate: RTCIceCandidate) {
+        console.log(`Sending ICE to ${this.remoteID}`)
+        this.ws.sendHandshake(this.remoteID, 2, candidate)
+    }
+
+    async computeIceCandidate(candidate: any) {
+        console.log(`Computing ICE from ${this.remoteID}`)
+        try {
+            await this.peerConn.addIceCandidate(candidate as RTCIceCandidate)
+        }catch(e) {
+            console.error('FDX joao!!!!', this.peerConn)
+        }
+
+    }
+
+    async messageForMe(hsMsg: wsHandshakeMsg) {
+        if (!hsMsg.message.stage)
+            return;
+
+        if (hsMsg.message.stage == 1) {
+
+            await this.computeAnswer(hsMsg.message.data)
+
+        }
+
+        if (hsMsg.message.stage == 2) {
+            this.computeIceCandidate(hsMsg.message.data)
+        }
 
     }
 
@@ -99,21 +183,22 @@ export class P2PConnection {
         return myPeer
     }
 
-    // openDataChannel() {
-    //   this.localChannel = this.myPeer?.createDataChannel("myDataChannel");
+    openDataChannel(fileId: string) {
+        this.localChannel = this.peerConn?.createDataChannel(fileId);
+        console.log('datachannel', this.localChannel)
 
-    //   this.localChannel.onopen = function () {
-    //     console.log("we in");
-    //   };
+        this.localChannel.onopen = function () {
+            console.log("we in");
+        };
 
-    //   this.localChannel.onerror = function (error: any) {
-    //     console.log("Error:", error);
-    //   };
+        this.localChannel.onerror = function (error: any) {
+            console.log("Error:", error);
+        };
 
-    //   this.localChannel.onmessage = function (event: { data: any; }) {
-    //     console.log("Got message:", event.data);
-    //   };
-    // }
+        this.localChannel.onmessage = function (event: { data: any; }) {
+            console.log("Got message:", event.data);
+        };
+    }
 
 
     // sendIceCandidate(target: string,  candidate: RTCIceCandidate) {
@@ -165,19 +250,7 @@ export class P2PConnection {
     //   }
     // }
 
-    async messageForMe(message: wsHandshakeMsg) {
 
-        if (message.message.stage == 1) {
-
-            await this.peerConn?.setRemoteDescription(message.message.data as unknown as RTCSessionDescriptionInit)
-            console.log(this.peerConn)
-        }
-
-        if( message.message.stage == 4) {
-            this.peerConn?.addIceCandidate(message.message.data as RTCIceCandidateInit )
-        }
-
-    }
 
 
     // terminated() {
