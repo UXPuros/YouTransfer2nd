@@ -1,23 +1,39 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
   <meta charset="UTF-8">
   <meta http-equiv="X-UA-Compatible" content="IE=edge">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Document</title>
 </head>
+
 <body>
 
   <h1>Test</h1>
- 
-  <input type="file" id="fileupload" name="fileupload" (change)="fileSet($event)" >
-   <ul>
-     <li *ngFor="let file of fileOffers;">
-      {{file.name}}
-       <button (click)="download(file.owner)">{{file.name}}</button>
-       <button (click)="deleteFile(file.id)">X</button>
-       
-     </li>
-   </ul>
+
+  <input type="file" id="fileupload" name="fileupload" (change)="fileSet($event)">
+  <ul style="list-style-type: none;">
+    <li *ngFor="let file of fileOffers;">
+      <div class="eachFile">
+        <span class="bigger">{{file.name}}</span>
+        <button (click)="download(file.owner)" class="pushable">
+          <span class="shadow"></span>
+          <span class="edge"></span>
+          <span class="front">
+            Download
+          </span>
+        </button>
+        <button (click)="deleteFile(file.id)" class="pushable">
+          <span class="shadow"></span>
+          <span class="edge"></span>
+          <span class="front">
+            X
+          </span>
+        </button>
+      </div>
+    </li>
+  </ul>
 </body>
+
 </html>

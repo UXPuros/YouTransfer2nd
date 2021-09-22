@@ -36,10 +36,10 @@ export class AppComponent implements OnDestroy {
       if (wsMessage.type == wsMessages.ALLFILES) {
         this.fileOffers = wsMessage.data as availableFile[]
       }
-      else if(wsMessage.type == wsMessages.P2PSTART){
-        this.p2p.getMofoConnection(wsMessage.to, wsMessage.data.usertype)
+      // else if(wsMessage.type == wsMessages.P2PSTART){
+      //   this.p2p.getMofoConnection(wsMessage.to, wsMessage.data.usertype)
 
-      }
+      // }
     })
   }
 
@@ -57,9 +57,9 @@ export class AppComponent implements OnDestroy {
   }
 
   download(owner:string) {
-    // console.log(owner)
-    // this.p2p.getMofoConnection(owner)
-    this.ws.sendPeerOrder(owner)
+
+    this.p2p.getMofoConnection(owner)
+
 
   }
 

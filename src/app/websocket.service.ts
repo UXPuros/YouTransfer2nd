@@ -9,8 +9,7 @@ export enum wsMessages {
   ALLFILES = 'files',
   FILEREQUEST = 'filereq',
   FILESEND = 'filesend', 
-  CANCEL = 'filecancel',
-  P2PSTART = 'p2pstart'
+  CANCEL = 'filecancel'
 }
 
 interface wsGenericMsg {
@@ -105,16 +104,6 @@ export class WebsocketService {
         stage: stage,
         data: data
       }
-    }
-    this.send(request)
-  }
-
-
-  sendPeerOrder(to: string ){
-    const request = {
-      type : wsMessages.P2PSTART,
-      to: to,
-      from: this._myId
     }
     this.send(request)
   }
