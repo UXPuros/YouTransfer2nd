@@ -50,18 +50,16 @@ export class AppComponent {
 
   download(owner: string) {
 
-    
-
     this.ts.download(owner)
 
+  }
+  
 
+  deleteFile(fileId:string) {
+    this.ts.deleteFile(fileId)
   }
 
-  // deleteFile(fileId: string) {
-
-  //   this.ws.revoqueFileOffering(fileId)
-
-  // }
+  
 
 
 

@@ -36,6 +36,12 @@ export class TransferService {
   download(owner:string){
     this.p2p.getMofoConnection(owner)
   }
+
+  deleteFile(fileId: string) {
+
+    this.ws.revoqueFileOffering(fileId)
+
+  }
   
   
 
