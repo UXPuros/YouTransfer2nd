@@ -47,60 +47,18 @@ export class Peer2peerService {
       this.MoFosConnections[targetConnection].messageForMe(wsMessage)
     }
 
-<<<<<<< Updated upstream
 
 
   }
 
   getMofoConnection(remoteID: string,): P2PConnection {
-=======
-  async giveMeAChannel(owner: string, fileId: string): Promise<RTCDataChannel> {
-    const connection = await this.getMofoConnection(owner);
-    console.log('I finally have a connection')
-
-
-    const channel = await new Promise<RTCDataChannel>((resolve, reject) => {
-      connection.getChannel(fileId, (channel: RTCDataChannel) => {
-        resolve(channel);
-      });
-    })
-
-    console.log('I finally have the channel')
-
-    return channel;
-  }
-
-  async getMofoConnection(remoteID: string): Promise<P2PConnection> {
->>>>>>> Stashed changes
     if (typeof this.MoFosConnections[remoteID] != 'undefined')
       return this.MoFosConnections[remoteID];
 
     const newP2PC = new P2PConnection(remoteID, this.websocket);
-<<<<<<< Updated upstream
-=======
-    this.MoFosConnections[remoteID] = newP2PC;
-
-    await new Promise<void>((resolve, reject) => {
-      newP2PC.onConnected(() => {
-
-        resolve();
-      })
-    })
-
-
-    return newP2PC;
-
-
-  }
-
-  getMofoConnection2(remoteID: string): P2PConnection {
-    if (typeof this.MoFosConnections[remoteID] != 'undefined')
-      return this.MoFosConnections[remoteID];
-
-    const newP2PC = new P2PConnection(remoteID, this.websocket);
->>>>>>> Stashed changes
 
     this.MoFosConnections[remoteID] = newP2PC;
+    
     return newP2PC;
 
   }
