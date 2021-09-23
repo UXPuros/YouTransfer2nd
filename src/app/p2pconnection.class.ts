@@ -20,41 +20,48 @@ export class P2PConnection {
     peerConn: RTCPeerConnection = new RTCPeerConnection(this.peerConfig)
 
     peepzWaiting: Function[] = [];
-    peepzWaitingForChannels: { [fileId: string]: Function } = {}
 
     constructor(private remoteID: string, private ws: WebsocketService, offer: any = null) {
 
-        
-     
+
+
         this.peerConn.onicecandidate = (e) => {
             if (e.candidate)
                 this.conjureIceCandidate(e.candidate)
         }
-        this.openDataChannel('default')
+        // this.openDataChannel('default')
 
         this.peerConn.onconnectionstatechange = (x) => {
-            console.log(this.peerConn.connectionState)
+            console.log(`%c Connection State: ${this.peerConn.connectionState}`, "background: blue;padding: 20px; color:white;");
+            if (this.peerConn.connectionState == 'connected') {
+                this.connected = true;
+                this.peepzWaiting.forEach(cb => {
+                    cb();
+                });
+                this.peepzWaiting = [];
+            }
+
         }
 
         this.peerConn.ondatachannel = (ChannelEvent: RTCDataChannelEvent) => {
-            // if (this.connected) {
-            //    const channel = ChannelEvent.channel;
-            //    const fileId = channel.label;
-            //    if(typeof this.peepzWaitingForChannels[fileId] == 'function') {
-            //         this.peepzWaitingForChannels[fileId](channel);
-            //         delete this.peepzWaitingForChannels[fileId];
-            //    }
-            // } else {
-            //     this.defaultChannel = ChannelEvent.channel;
-            //     this.connected = true;
-            //     this.peepzWaiting.forEach(cb => {
-            //         cb();
-            //     });
-            //     this.peepzWaiting = [];
-            // }
-            console.log(`%c Got a channel!`, "background: red;padding: 20px; color:white;");
-            console.log(ChannelEvent)
-        };
+
+            console.log(`%c Got a channel (${ChannelEvent.channel.label})!`, "background: cyan;padding: 20px; color:blue;");
+
+            const channel = ChannelEvent.channel;
+            const fileId = channel.label;
+            this.dataChannels.push(channel);
+
+            
+            const data = new Uint8Array([0b01011001,0b01101111,0b01110101,0b01110011,0b01110101,0b01100011,0b01101011,0b00100001])
+            channel.send(data)
+            
+
+            if (!this.defaultChannel)
+                this.defaultChannel = ChannelEvent.channel;
+        }
+        // console.log(`%c Got a channel!`, "background: red;padding: 20px; color:white;");
+        // console.log(ChannelEvent)
+
 
 
         // this.peerConn.onicegatheringstatechange = evt => {
@@ -69,10 +76,13 @@ export class P2PConnection {
         //     console.log(`%c icecandidateerror`, "background: black;padding: 20px; color:red;");
         // };
 
-        this.peerConn.oniceconnectionstatechange = evt => {
-            console.log(`%c Connection State: ${this.peerConn.connectionState}`, "background: blue;padding: 20px; color:white;");
+        // this.peerConn.oniceconnectionstatechange = evt => {
+        //     console.log(`%c Connection State: ${this.peerConn.connectionState}`, "background: blue;padding: 20px; color:white;");
+        //     // if(this.peerConn.connectionState =='connected') {
 
-        };
+        //     // }
+
+        // };
 
         if (!offer)
             this.conjureOffer()
@@ -87,14 +97,21 @@ export class P2PConnection {
     }
 
     getChannel(fileId: string, cb: Function) {
-        this.peepzWaitingForChannels[fileId] = cb;
-        this.peerConn?.createDataChannel(fileId);
+        const newChannel = this.peerConn?.createDataChannel(fileId);
+        newChannel.onopen = () => {
+            this.dataChannels.push(newChannel);
+            newChannel.onmessage = (me:MessageEvent) => {
+                console.log(`Incoming file data:`, new TextDecoder().decode(me.data))
+            
+            }
+            cb(newChannel)
+        }  
     }
 
 
     async conjureOffer() {
 
-
+        this.defaultChannel = this.peerConn?.createDataChannel('default');
         const offer = await this.peerConn?.createOffer()
         await this.peerConn.setLocalDescription(offer)
 
@@ -172,7 +189,7 @@ export class P2PConnection {
         };
 
 
-        
+
     }
 
 
