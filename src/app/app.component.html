@@ -14,17 +14,17 @@
 
   <input type="file" id="fileupload" name="fileupload" (change)="fileSet($event)">
   <ul style="list-style-type: none;">
-    <li *ngFor="let file of fileOffers;">
+    <li *ngFor="let file of ts.fileOffers;">
       <div class="eachFile">
         <span class="bigger">{{file.name}}</span>
-        <button (click)="download(file.owner)" class="pushable">
+        <button *ngIf="iOwnThisFile(file.owner)" (click)="download(file.owner, file.id)" class="pushable">
           <span class="shadow"></span>
           <span class="edge"></span>
           <span class="front">
             Download
           </span>
         </button>
-        <button (click)="deleteFile(file.id)" class="pushable">
+        <button *ngIf="iDontOwnThisFile(file.owner)"(click)="deleteFile(file.id)" class="pushable">
           <span class="shadow"></span>
           <span class="edge"></span>
           <span class="front">

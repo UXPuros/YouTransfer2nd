@@ -11,7 +11,7 @@ export class TransferService {
 
   fileOffers: availableFile[] = []
 
-  // allFiles:availableFile
+  allFiles:availableFile[] = []
 
   constructor(private ws:WebsocketService, private p2p:Peer2peerService) { 
 
@@ -28,19 +28,35 @@ export class TransferService {
   fileOffer(file: File) {
 
     this.ws.sendFileOffering(`F${file.lastModified}`, file.name, file.size, file.type)
-    
 
   }
 
 
-  download(owner:string){
-    this.p2p.getMofoConnection(owner)
+  async download(owner:string, fileId: string){
+
+    // let myPeer=this.p2p.getMofoConnection(owner)
+
+    // let dataChannel = myPeer.openDataChannel(fileId)
+
+    // dataChannel.onopen = () =>{ 
+    //   // dataChannel.onmessage
+    //   dataChannel.send('hello') 
+    // }
+    
+    const channel = await this.p2p.giveMeAChannel(owner,fileId);
+
+    console.log(`%c Got the channel "${fileId}"!`, "background: pink;padding: 10px; color:white;");
+    console.log(channel)
   }
 
   deleteFile(fileId: string) {
 
     this.ws.revoqueFileOffering(fileId)
 
+  }
+
+  get myId() {
+    return this.ws.myId
   }
   
   

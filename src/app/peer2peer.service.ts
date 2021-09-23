@@ -46,20 +46,28 @@ export class Peer2peerService {
     } else {
       this.MoFosConnections[targetConnection].messageForMe(wsMessage)
     }
-
-
-
   }
 
-  getMofoConnection(remoteID: string,): P2PConnection {
+   giveMeAChannel(owner: string, fileId: string): Promise<RTCDataChannel | null> {
+    const connection = this.getMofoConnection(owner);
+    console.log('I finally have a connection')
+
+
+    return new Promise((resolve, reject) => {
+      connection.getChannel(fileId, (channel:RTCDataChannel) => {
+        resolve(channel);
+      });
+    })
+  }
+
+   getMofoConnection(remoteID: string): P2PConnection {
     if (typeof this.MoFosConnections[remoteID] != 'undefined')
       return this.MoFosConnections[remoteID];
 
+    console.log('Corri #1')
     const newP2PC = new P2PConnection(remoteID, this.websocket);
-
-    this.MoFosConnections[remoteID] = newP2PC;
-    return newP2PC;
-
+    return newP2PC
+  
   }
 
 }

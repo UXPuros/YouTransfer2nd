@@ -28,11 +28,12 @@ export class AppComponent {
   title = 'peertest';
 
   fileOffers: availableFile[] = []
+  uploadedFiles: [] = []
   
 
 
   constructor(public ts: TransferService) {
-    console.log(ts.fileOffers)
+    // console.log(ts.fileOffers)
 
   }
 
@@ -48,19 +49,28 @@ export class AppComponent {
   }
 
 
-  download(owner: string) {
+  download(owner: string, fileId: string) {
+    
+    this.ts.download(owner, fileId)
 
-    this.ts.download(owner)
+    // let ownership : boolean = false
+    // if(owner==this.ts.myId){
+    //   console.log('owner', owner)
+    //   console.log('this.ts.myId', this.ts.myId)
+    // }
 
   }
-  
+
 
   deleteFile(fileId:string) {
     this.ts.deleteFile(fileId)
   }
 
-  
-
-
+  iOwnThisFile(owner:string) : boolean{
+    return !(this.ts.myId==owner) 
+  }
+  iDontOwnThisFile(owner:string) : boolean{
+    return (this.ts.myId==owner) 
+  }
 
 }

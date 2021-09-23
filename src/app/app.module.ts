@@ -16,6 +16,7 @@ import { DownloadButtonComponent } from './download-button/download-button.compo
   imports: [
     BrowserModule,
     AppRoutingModule
+    
   ],
   providers: [WebsocketService, 
               Peer2peerService
